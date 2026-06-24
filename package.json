@@ -1,0 +1,50 @@
+{
+  "name": "@tratto/angular",
+  "version": "0.1.0",
+  "description": "Angular integration for Tratto email platform",
+  "author": "Tratto <hello@tratto.email>",
+  "license": "MIT",
+  "homepage": "https://tratto.email",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tratto-email/tratto-angular.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tratto-email/tratto-angular/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@angular/common": ">=22",
+    "@angular/core": ">=22"
+  },
+  "devDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/compiler": "^22.0.0",
+    "@angular/compiler-cli": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "ng-packagr": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

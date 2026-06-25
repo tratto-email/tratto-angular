@@ -8,6 +8,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 
 - [Code of conduct](#code-of-conduct)
 - [Getting started](#getting-started)
+- [Running tests](#running-tests)
 - [Project structure](#project-structure)
 - [Development workflow](#development-workflow)
 - [Coding standards](#coding-standards)
@@ -60,6 +61,34 @@ npm link @tratto/angular
 
 ---
 
+## Running tests
+
+Tests use [Vitest](https://vitest.dev/) with Angular's `TestBed` and `HttpClientTestingModule`.
+
+```bash
+# Run the full suite once
+npm test
+
+# Watch mode (re-runs on file changes)
+npm run test:watch
+
+# With coverage report (output in coverage/)
+npm run test:coverage
+```
+
+### Test structure
+
+Each service has a corresponding `*.spec.ts` file alongside it in `src/services/`. Tests follow this pattern:
+
+1. Set up `TestBed` with `provideHttpClient()`, `provideHttpClientTesting()`, `TRATTO_CONFIG`, and the service under test.
+2. Use `HttpTestingController` to assert the correct HTTP method, URL, headers, and query parameters.
+3. Flush a mock response and assert the Observable emits the correctly unwrapped data.
+4. Call `http.verify()` in `afterEach` to catch any unexpected pending requests.
+
+When adding a new service, add a matching `*.spec.ts` that covers every public method.
+
+---
+
 ## Project structure
 
 ```
@@ -70,21 +99,18 @@ tratto-angular/
 │   ├── tratto.types.ts           # All request/response TypeScript interfaces
 │   ├── tratto.module.ts          # provideTratt() + TrattoModule.forRoot()
 │   ├── tratto.service.ts         # TrattoService facade (one property per resource)
+│   ├── tratto.module.spec.ts     # Tests for providers and NgModule
+│   ├── tratto.service.spec.ts    # Tests for the facade
 │   └── services/
 │       ├── base.service.ts         # Abstract base: HttpClient, auth headers, void helper
+│       ├── base.service.spec.ts
 │       ├── emails.service.ts
-│       ├── contacts.service.ts
-│       ├── audiences.service.ts
-│       ├── campaigns.service.ts
-│       ├── templates.service.ts
-│       ├── webhooks.service.ts
-│       ├── domains.service.ts
-│       ├── api-keys.service.ts
-│       ├── analytics.service.ts
-│       ├── flows.service.ts
-│       └── workspace.service.ts
+│       ├── emails.service.spec.ts
+│       └── ... (one .ts + .spec.ts pair per resource)
 ├── examples/
 │   └── angular-app/              # Minimal runnable demo
+├── vitest.config.ts
+├── vitest.setup.ts
 ├── ng-package.json             # ng-packagr config
 ├── tsconfig.json
 └── package.json
@@ -119,6 +145,7 @@ Examples:
 feat(contacts): add deleteContact method
 fix(emails): handle 204 response without body
 docs: add flow automation example to README
+test(campaigns): add spec for scheduledAt serialisation
 refactor(base): extract query-param builder helper
 ```
 
@@ -243,9 +270,11 @@ Following these steps keeps every service consistent.
    export type { MyResource, CreateMyResourceParams } from './tratto.types';
    ```
 
-6. **Document** the new service in `README.md` following the same pattern as existing sections.
+6. **Add a spec** `src/services/<resource>.service.spec.ts` covering every public method.
 
-7. **Update `CHANGELOG.md`** under an `[Unreleased]` heading.
+7. **Document** the new service in `README.md` following the same pattern as existing sections.
+
+8. **Update `CHANGELOG.md`** under an `[Unreleased]` heading.
 
 ---
 
@@ -253,9 +282,10 @@ Following these steps keeps every service consistent.
 
 1. Fork the repo and create a branch following the naming convention above.
 2. Make your changes, ensuring all coding standards are met.
-3. Verify the library builds without errors:
+3. Verify the library builds and tests pass:
    ```bash
    npm run build
+   npm test
    ```
 4. Open a PR against `main`. Fill in the PR template completely.
 5. Keep PRs focused — one feature or fix per PR.
@@ -268,6 +298,7 @@ Following these steps keeps every service consistent.
 - [ ] All public methods have JSDoc
 - [ ] New types are exported from `src/index.ts`
 - [ ] New services are registered in `tratto.module.ts` and `tratto.service.ts`
+- [ ] Spec file added/updated and `npm test` passes
 - [ ] `README.md` updated if the public API changed
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 - [ ] `npm run build` passes locally

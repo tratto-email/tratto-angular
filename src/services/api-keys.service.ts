@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   ApiKey,
@@ -14,9 +12,7 @@ import type {
 /** Service for creating and revoking API keys. */
 @Injectable()
 export class ApiKeysService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/api-keys`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/api-keys`;
 
   /**
    * Create a new API key (`POST /v1/api-keys`).
@@ -33,7 +29,7 @@ export class ApiKeysService extends BaseService {
     );
     return this.http
       .post<{ data: ApiKeyCreated }>(this.url, params, { headers })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -41,12 +37,9 @@ export class ApiKeysService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListApiKeysParams): Observable<PaginatedResponse<ApiKey>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<ApiKey>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -61,6 +54,6 @@ export class ApiKeysService extends BaseService {
       .delete<{ data: { id: string; revokedAt: string } }>(`${this.url}/${id}`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

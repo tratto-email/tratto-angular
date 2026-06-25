@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Template,
@@ -17,22 +15,16 @@ import type {
 /** Service for managing email templates and their version history. */
 @Injectable()
 export class TemplatesService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/templates`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/templates`;
 
   /**
    * List templates (`GET /v1/templates`).
    * Results are ordered by creation date descending.
    */
   list(params?: ListTemplatesParams): Observable<PaginatedResponse<TemplateSummary>> {
-    let p = new HttpParams();
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.status) p = p.set('status', params.status);
     return this.http.get<PaginatedResponse<TemplateSummary>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ limit: params?.limit, after: params?.after, status: params?.status }),
     });
   }
 
@@ -43,7 +35,7 @@ export class TemplatesService extends BaseService {
   create(params: CreateTemplateParams): Observable<Template> {
     return this.http
       .post<{ data: Template }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -52,7 +44,7 @@ export class TemplatesService extends BaseService {
   get(id: string): Observable<Template> {
     return this.http
       .get<{ data: Template }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -62,7 +54,7 @@ export class TemplatesService extends BaseService {
   update(id: string, params: UpdateTemplateParams): Observable<Template> {
     return this.http
       .patch<{ data: Template }>(`${this.url}/${id}`, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -81,7 +73,7 @@ export class TemplatesService extends BaseService {
       .get<{ data: TemplateVersionSummary[] }>(`${this.url}/${id}/versions`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -92,7 +84,7 @@ export class TemplatesService extends BaseService {
       .get<{ data: TemplateVersion }>(`${this.url}/${id}/versions/${version}`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -113,6 +105,6 @@ export class TemplatesService extends BaseService {
         { to, variables },
         { headers: this.authHeaders() },
       )
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

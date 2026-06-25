@@ -9,6 +9,9 @@ import { BaseService } from './base.service';
 class ConcreteService extends BaseService {
   getApiBaseUrl() { return this.apiBaseUrl; }
   getAuthHeaders(extra?: Record<string, string>) { return this.authHeaders(extra); }
+  callBuildParams(params: Record<string, string | number | boolean | Date | null | undefined>) {
+    return this.buildParams(params);
+  }
   callVoidRequest(method: 'DELETE' | 'PATCH' | 'POST', url: string) {
     return this.voidRequest(method, url);
   }
@@ -61,6 +64,27 @@ describe('BaseService', () => {
     const headers = service.getAuthHeaders({ 'X-Custom': 'value' });
     expect(headers.get('Authorization')).toBe('Bearer tratto_test_key');
     expect(headers.get('X-Custom')).toBe('value');
+  });
+
+  describe('buildParams()', () => {
+    it('omits null and undefined values', () => {
+      const p = service.callBuildParams({ a: 'x', b: null, c: undefined });
+      expect(p.get('a')).toBe('x');
+      expect(p.has('b')).toBe(false);
+      expect(p.has('c')).toBe(false);
+    });
+
+    it('serialises numbers and booleans to strings', () => {
+      const p = service.callBuildParams({ limit: 20, active: true });
+      expect(p.get('limit')).toBe('20');
+      expect(p.get('active')).toBe('true');
+    });
+
+    it('serialises Date values to ISO strings', () => {
+      const date = new Date('2025-01-01T00:00:00.000Z');
+      const p = service.callBuildParams({ dateFrom: date });
+      expect(p.get('dateFrom')).toBe('2025-01-01T00:00:00.000Z');
+    });
   });
 
   it('voidRequest sends the request and maps the response to void', () => {

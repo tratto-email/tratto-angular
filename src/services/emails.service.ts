@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   SendEmailParams,
@@ -15,9 +13,7 @@ import type {
 /** Service for sending transactional emails and inspecting their delivery. */
 @Injectable()
 export class EmailsService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/emails`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/emails`;
 
   /**
    * Send a transactional email (`POST /v1/emails`).
@@ -34,7 +30,7 @@ export class EmailsService extends BaseService {
     );
     return this.http
       .post<{ data: { id: string } }>(this.url, params, { headers })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -42,27 +38,17 @@ export class EmailsService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListEmailsParams): Observable<PaginatedResponse<EmailSummary>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
-    if (params?.status) p = p.set('status', params.status);
-    if (params?.domainId) p = p.set('domainId', params.domainId);
-    if (params?.tags) p = p.set('tags', params.tags);
-    if (params?.dateFrom) {
-      p = p.set(
-        'dateFrom',
-        params.dateFrom instanceof Date ? params.dateFrom.toISOString() : params.dateFrom,
-      );
-    }
-    if (params?.dateTo) {
-      p = p.set(
-        'dateTo',
-        params.dateTo instanceof Date ? params.dateTo.toISOString() : params.dateTo,
-      );
-    }
     return this.http.get<PaginatedResponse<EmailSummary>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({
+        after: params?.after,
+        limit: params?.limit,
+        status: params?.status,
+        domainId: params?.domainId,
+        tags: params?.tags,
+        dateFrom: params?.dateFrom,
+        dateTo: params?.dateTo,
+      }),
     });
   }
 
@@ -72,7 +58,7 @@ export class EmailsService extends BaseService {
   get(id: string): Observable<EmailDetail> {
     return this.http
       .get<{ data: EmailDetail }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -81,6 +67,6 @@ export class EmailsService extends BaseService {
   listEvents(id: string): Observable<EmailEvent[]> {
     return this.http
       .get<{ data: EmailEvent[] }>(`${this.url}/${id}/events`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

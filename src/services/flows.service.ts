@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Flow,
@@ -14,21 +12,16 @@ import type {
 /** Service for managing email automation flows. */
 @Injectable()
 export class FlowsService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/flows`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/flows`;
 
   /**
    * List automation flows (`GET /v1/flows`).
    * Results are ordered by creation date descending.
    */
   list(params?: ListFlowsParams): Observable<PaginatedResponse<Flow>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<Flow>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -39,7 +32,7 @@ export class FlowsService extends BaseService {
   create(params: CreateFlowParams): Observable<{ id: string }> {
     return this.http
       .post<{ data: { id: string } }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -48,7 +41,7 @@ export class FlowsService extends BaseService {
   get(id: string): Observable<Flow> {
     return this.http
       .get<{ data: Flow }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -58,7 +51,7 @@ export class FlowsService extends BaseService {
   update(id: string, params: UpdateFlowParams): Observable<Flow> {
     return this.http
       .patch<{ data: Flow }>(`${this.url}/${id}`, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -68,7 +61,7 @@ export class FlowsService extends BaseService {
   delete(id: string): Observable<{ id: string }> {
     return this.http
       .delete<{ data: { id: string } }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -77,7 +70,7 @@ export class FlowsService extends BaseService {
   activate(id: string): Observable<Flow> {
     return this.http
       .post<{ data: Flow }>(`${this.url}/${id}/activate`, {}, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -88,6 +81,6 @@ export class FlowsService extends BaseService {
   deactivate(id: string): Observable<Flow> {
     return this.http
       .post<{ data: Flow }>(`${this.url}/${id}/deactivate`, {}, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

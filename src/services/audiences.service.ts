@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Audience,
@@ -14,9 +12,7 @@ import type {
 /** Service for managing contact audiences. */
 @Injectable()
 export class AudiencesService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/audiences`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/audiences`;
 
   /**
    * Create an audience (`POST /v1/audiences`).
@@ -25,7 +21,7 @@ export class AudiencesService extends BaseService {
   create(params: CreateAudienceParams): Observable<{ id: string }> {
     return this.http
       .post<{ data: { id: string } }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -33,12 +29,9 @@ export class AudiencesService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListAudiencesParams): Observable<PaginatedResponse<Audience>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<Audience>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -48,7 +41,7 @@ export class AudiencesService extends BaseService {
   get(id: string): Observable<Audience> {
     return this.http
       .get<{ data: Audience }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -65,6 +58,6 @@ export class AudiencesService extends BaseService {
         { contactIds },
         { headers: this.authHeaders() },
       )
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Workspace,
@@ -15,9 +14,7 @@ import type {
 /** Service for managing workspace settings and team members. */
 @Injectable()
 export class WorkspaceService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/workspace`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/workspace`;
 
   /**
    * Get the current workspace (`GET /v1/workspace`).
@@ -26,7 +23,7 @@ export class WorkspaceService extends BaseService {
   get(): Observable<Workspace> {
     return this.http
       .get<{ data: Workspace }>(this.url, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -36,7 +33,7 @@ export class WorkspaceService extends BaseService {
   update(params: UpdateWorkspaceParams): Observable<Workspace> {
     return this.http
       .patch<{ data: Workspace }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -56,7 +53,7 @@ export class WorkspaceService extends BaseService {
       .patch<{ data: WorkspacePreferences }>(`${this.url}/preferences`, params, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -68,7 +65,7 @@ export class WorkspaceService extends BaseService {
       .post<{ data: WorkspaceMember }>(`${this.url}/members/invite`, params, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -79,7 +76,7 @@ export class WorkspaceService extends BaseService {
       .patch<{ data: WorkspaceMember }>(`${this.url}/members/${userId}`, params, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**

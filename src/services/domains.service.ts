@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Domain,
@@ -13,9 +11,7 @@ import type {
 /** Service for adding and verifying sender domains. */
 @Injectable()
 export class DomainsService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/domains`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/domains`;
 
   /**
    * Add a domain and generate its DKIM keypair (`POST /v1/domains`).
@@ -26,7 +22,7 @@ export class DomainsService extends BaseService {
   add(domain: string): Observable<Domain> {
     return this.http
       .post<{ data: Domain }>(this.url, { domain }, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -34,12 +30,9 @@ export class DomainsService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListDomainsParams): Observable<PaginatedResponse<DomainSummary>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<DomainSummary>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -49,7 +42,7 @@ export class DomainsService extends BaseService {
   get(id: string): Observable<Domain> {
     return this.http
       .get<{ data: Domain }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -60,7 +53,7 @@ export class DomainsService extends BaseService {
   verify(id: string): Observable<Domain> {
     return this.http
       .post<{ data: Domain }>(`${this.url}/${id}/verify`, {}, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -73,6 +66,6 @@ export class DomainsService extends BaseService {
       .delete<{ data: { id: string; deletedAt: string } }>(`${this.url}/${id}`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

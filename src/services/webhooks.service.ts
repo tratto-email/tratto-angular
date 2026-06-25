@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Webhook,
@@ -14,9 +12,7 @@ import type {
 /** Service for managing webhook endpoints and inspecting delivery history. */
 @Injectable()
 export class WebhooksService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/webhooks`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/webhooks`;
 
   /**
    * Register a new webhook endpoint (`POST /v1/webhooks`).
@@ -31,7 +27,7 @@ export class WebhooksService extends BaseService {
       .post<{ data: { id: string; secret: string } }>(this.url, params, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -41,7 +37,7 @@ export class WebhooksService extends BaseService {
   list(): Observable<Webhook[]> {
     return this.http
       .get<{ data: Webhook[] }>(this.url, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -59,12 +55,9 @@ export class WebhooksService extends BaseService {
     id: string,
     params?: ListWebhookDeliveriesParams,
   ): Observable<PaginatedResponse<WebhookDelivery>> {
-    let p = new HttpParams();
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<WebhookDelivery>>(`${this.url}/${id}/deliveries`, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -77,7 +70,7 @@ export class WebhooksService extends BaseService {
       .post<{ data: { queued: boolean } }>(`${this.url}/${id}/test`, {}, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -90,6 +83,6 @@ export class WebhooksService extends BaseService {
       .post<{ data: { secret: string } }>(`${this.url}/${id}/rotate-secret`, {}, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

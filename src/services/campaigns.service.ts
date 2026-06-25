@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Campaign,
@@ -15,9 +13,7 @@ import type {
 /** Service for managing and sending email campaigns. */
 @Injectable()
 export class CampaignsService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/campaigns`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/campaigns`;
 
   /**
    * Create a campaign in `draft` status (`POST /v1/campaigns`).
@@ -26,7 +22,7 @@ export class CampaignsService extends BaseService {
   create(params: CreateCampaignParams): Observable<{ id: string }> {
     return this.http
       .post<{ data: { id: string } }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -34,13 +30,9 @@ export class CampaignsService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListCampaignsParams): Observable<PaginatedResponse<Campaign>> {
-    let p = new HttpParams();
-    if (params?.status) p = p.set('status', params.status);
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<Campaign>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({ status: params?.status, after: params?.after, limit: params?.limit }),
     });
   }
 
@@ -50,7 +42,7 @@ export class CampaignsService extends BaseService {
   get(id: string): Observable<Campaign> {
     return this.http
       .get<{ data: Campaign }>(`${this.url}/${id}`, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -61,7 +53,7 @@ export class CampaignsService extends BaseService {
       .get<{ data: CampaignStatsDetail }>(`${this.url}/${id}/stats`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -84,7 +76,7 @@ export class CampaignsService extends BaseService {
       .post<{ data: { status: string } }>(`${this.url}/${id}/send`, body, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -95,7 +87,7 @@ export class CampaignsService extends BaseService {
       .post<{ data: { status: string } }>(`${this.url}/${id}/pause`, {}, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -111,6 +103,6 @@ export class CampaignsService extends BaseService {
       .post<{ data: { emailId: string } }>(`${this.url}/${id}/test-send`, { to }, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

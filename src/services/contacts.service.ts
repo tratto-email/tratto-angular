@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseService } from './base.service';
 import type {
   Contact,
@@ -15,9 +14,7 @@ import type {
 /** Service for managing contacts and running CSV imports. */
 @Injectable()
 export class ContactsService extends BaseService {
-  private get url(): string {
-    return `${this.apiBaseUrl}/v1/contacts`;
-  }
+  private readonly url = `${this.apiBaseUrl}/v1/contacts`;
 
   /**
    * Create a single contact (`POST /v1/contacts`).
@@ -26,7 +23,7 @@ export class ContactsService extends BaseService {
   create(params: CreateContactParams): Observable<{ id: string }> {
     return this.http
       .post<{ data: { id: string } }>(this.url, params, { headers: this.authHeaders() })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -34,15 +31,15 @@ export class ContactsService extends BaseService {
    * Results are ordered by creation date descending.
    */
   list(params?: ListContactsParams): Observable<PaginatedResponse<Contact>> {
-    let p = new HttpParams();
-    if (params?.status) p = p.set('status', params.status);
-    if (params?.audienceId) p = p.set('audienceId', params.audienceId);
-    if (params?.tag) p = p.set('tag', params.tag);
-    if (params?.after) p = p.set('after', params.after);
-    if (params?.limit != null) p = p.set('limit', String(params.limit));
     return this.http.get<PaginatedResponse<Contact>>(this.url, {
       headers: this.authHeaders(),
-      params: p,
+      params: this.buildParams({
+        status: params?.status,
+        audienceId: params?.audienceId,
+        tag: params?.tag,
+        after: params?.after,
+        limit: params?.limit,
+      }),
     });
   }
 
@@ -55,7 +52,7 @@ export class ContactsService extends BaseService {
       .patch<{ data: { id: string } }>(`${this.url}/${id}`, params, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -81,7 +78,7 @@ export class ContactsService extends BaseService {
           }),
         },
       )
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 
   /**
@@ -92,6 +89,6 @@ export class ContactsService extends BaseService {
       .get<{ data: ImportJobStatus }>(`${this.url}/import/${jobId}`, {
         headers: this.authHeaders(),
       })
-      .pipe(map((r) => r.data));
+      .pipe(this.unwrap());
   }
 }

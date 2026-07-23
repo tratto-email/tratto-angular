@@ -7,22 +7,11 @@
   "homepage": "https://tratto.email",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tratto-email/tratto-angular.git"
+    "url": "git+https://github.com/tratto-email/tratto-angular.git"
   },
   "bugs": {
     "url": "https://github.com/tratto-email/tratto-angular/issues"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": ["dist"],
   "sideEffects": false,
   "scripts": {
     "build": "ng-packagr -p ng-package.json",
